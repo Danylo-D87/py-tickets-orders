@@ -51,26 +51,32 @@ class MovieViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return MovieListSerializer
-
         if self.action == "retrieve":
             return MovieDetailSerializer
-
         return MovieSerializer
 
     def get_queryset(self):
         queryset = Movie.objects.all().order_by("id")
 
-        # genres можуть бути передані як рядок "2,3,4" — треба розбити
         genres_param = self.request.query_params.get("genres")
         if genres_param:
-            genres = genres_param.split(",")
-            queryset = queryset.filter(genres__id__in=genres)
+            try:
+                genres = [int(g) for g in genres_param.split(",")
+                          if g.isdigit()]
+                if genres:
+                    queryset = queryset.filter(genres__id__in=genres)
+            except ValueError:
+                pass
 
-        # actors аналогічно
         actors_param = self.request.query_params.get("actors")
         if actors_param:
-            actors = actors_param.split(",")
-            queryset = queryset.filter(actors__id__in=actors)
+            try:
+                actors = [int(a) for a in actors_param.split(",")
+                          if a.isdigit()]
+                if actors:
+                    queryset = queryset.filter(actors__id__in=actors)
+            except ValueError:
+                pass
 
         title = self.request.query_params.get("title")
         if title:
